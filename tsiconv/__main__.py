@@ -11,6 +11,7 @@ from pprint import pprint#, pformat
 
 ## Third Party libraries
 import pkg_resources
+import pytz
 
 ## Modules
 # try:
@@ -50,8 +51,25 @@ def __print_dunders__():
             else:
                 pprint("%s => %s" % (k, v))
 
+def isNaive(t):
+    if t.tzinfo is None or t.tzinfo.utcoffset(t) is None:
+        return True
+    else:
+        return False
+
+def isAware(t):
+    if t.tzinfo is not None and t.tzinfo.utcoffset(t) is not None:
+        return True
+    else:
+        return False
+
 def demo():
     __print_dunders__()
+    sys.exit(1)
+
+def usage_list():
+    for i in pytz.all_timezones:
+        print(i)
     sys.exit(1)
 
 def begin_logging():
@@ -71,6 +89,7 @@ def collect_args():
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-V', '--version', action='version', version=__code_version__)
     parser.add_argument('-v', '--verbose', action='count', default=0)
+    parser.add_argument('-l', '--list', action='store_true', help="List out the timezones supported by this application")
     args = parser.parse_args()
     return parser, args
 
@@ -84,7 +103,8 @@ def main():
     args = handle_args()
 
     try:
-        return
+        if args.list:
+            usage_list()
     except Exception as e:
         pprint(e)
         raise e
