@@ -7,11 +7,12 @@ import os
 import sys
 import argparse
 import logging
-from pprint import pprint#, pformat
+from pprint import pprint
 
 ## Third Party libraries
 import pkg_resources
 import pytz
+from dateutil.parser import isoparse
 
 ## Modules
 # try:
@@ -83,12 +84,14 @@ def begin_logging():
     log = logging.getLogger(__package_name__)
     log.setLevel(logging.INFO)
     log.addHandler(handler)
+    return log
 
 def collect_args():
     parser = argparse.ArgumentParser(description=__code_desc__,
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-V', '--version', action='version', version=__code_version__)
     parser.add_argument('-v', '--verbose', action='count', default=0)
+    parser.add_argument('-t', '--time', action='store', required=True, help="A datetime to convert. This should be in ISO-8601 format")
     parser.add_argument('-l', '--list', action='store_true', help="List out the timezones supported by this application")
     args = parser.parse_args()
     return parser, args
@@ -99,10 +102,12 @@ def handle_args():
     return args
 
 def main():
-    begin_logging()
+    log = begin_logging()
     args = handle_args()
 
     try:
+
+        # print out timezones?
         if args.list:
             usage_list()
     except Exception as e:
