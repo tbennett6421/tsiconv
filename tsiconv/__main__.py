@@ -105,7 +105,7 @@ def usage_list():
 def print_usage_and_exit(parser, msg):
     if msg:
         print(msg)
-    parser.print_help
+    parser.print_help()
     sys.exit(C_ERR_USAGE)
 
 def begin_logging():
@@ -148,14 +148,14 @@ def handle_args():
 
     if args.source:
         if args.source not in pytz.all_timezones:
-            msg  = f"[!]: Provided argument {args.source} not a supported timezone"
-            msg += f"Consider using the -l option"
+            msg  = f"[!] Provided argument {args.source} not a supported timezone\n"
+            msg += f"[!] Consider using the -l option\n"
             print_usage_and_exit(parser, msg)
 
     if args.destination:
         if args.destination not in pytz.all_timezones:
-            msg  = f"[!]: Provided argument {args.destination} not a supported timezone"
-            msg += f"Consider using the -l option"
+            msg  = f"[!] Provided argument {args.destination} not a supported timezone\n"
+            msg += f"[!] Consider using the -l option\n"
             print_usage_and_exit(parser, msg)
 
     return parser, args
