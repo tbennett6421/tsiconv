@@ -183,7 +183,10 @@ def main():
         # Print results
         print(f"[*] Args:")
         if args.source:
-            print(f"[*] source: {args.source}")
+            if na == 'naive':
+                print(f"[*] source: {args.source}")
+            else:
+                print(f"[*] source: {args.source} [IGNORED]")
         if args.destination:
             print(f"[*] destination: {args.destination}")
         print(f"[+] Input  24h: {to24h(dt)}")
