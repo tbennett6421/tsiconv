@@ -102,6 +102,12 @@ def usage_list():
         print(i)
     sys.exit(C_ERR_USAGE)
 
+def print_usage_and_exit(parser, msg):
+    if msg:
+        print(msg)
+    parser.print_help
+    sys.exit(C_ERR_USAGE)
+
 def begin_logging():
     handler = logging.StreamHandler()
     handler.setFormatter(
@@ -133,6 +139,25 @@ def collect_args():
 def handle_args():
     # collect parser if needed to conditionally call usage: parser.print_help()
     parser, args = collect_args()
+
+    # print out timezones?
+    if args.list:
+        usage_list()
+
+    # validate arguments
+
+    if args.source:
+        if args.source not in pytz.all_timezones:
+            msg  = f"[!]: Provided argument {args.source} not a supported timezone"
+            msg += f"Consider using the -l option"
+            print_usage_and_exit(parser, msg)
+
+    if args.destination:
+        if args.destination not in pytz.all_timezones:
+            msg  = f"[!]: Provided argument {args.destination} not a supported timezone"
+            msg += f"Consider using the -l option"
+            print_usage_and_exit(parser, msg)
+
     return parser, args
 
 def main():
@@ -140,20 +165,13 @@ def main():
     parser, args = handle_args()
 
     try:
-
-        # print out timezones?
-        if args.list:
-            usage_list()
-
         # Capture user input, convert to UTC
         dt, na = handle_user_time(args.time, args.verbose, log)
         assert na in ['naive', 'aware']
         if na == 'naive':
             if args.source is None:
                 msg = "[!] A naive timestamp was provided with no identifying timezone information. See option -s"
-                print(msg)
-                parser.print_help()
-                sys.exit(C_ERR_USAGE)
+                print_usage_and_exit(parser, msg)
             utctime = naiveToUTC(dt, args.source)
         else:
             utctime = awareToUTC(dt)
