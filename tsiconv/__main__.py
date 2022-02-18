@@ -19,7 +19,7 @@ C_ERR_USAGE = 1
 try:
     __code_name__  = __package_name__
     # spacing is deliberate
-    __code_desc__ = """ program description to be displayed by argparse \n    ex: python {name}
+    __code_desc__ = """ a program to convert timezones \n    ex: python {name}
         """.format(name=str(__package_name__)+'.py')
     _distro = pkg_resources.get_distribution(__package_name__)
     __code_version__ = _distro.version
