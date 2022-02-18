@@ -3,7 +3,6 @@ __metaclass__ = type
 __package_name__ = 'tsiconv'
 
 ## Standard Libraries
-import os
 import sys
 import argparse
 import logging
@@ -14,16 +13,6 @@ import pkg_resources
 import pytz
 from dateutil.parser import isoparse
 
-## Modules
-# try:
-#     from .classes import CustomExceptions
-# except ImportError:
-#     # If we can't import modules, probably running from VSCODE
-#     # attempt to hack in modules
-#     import importlib
-#     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-#     sys.path.append(os.path.dirname(SCRIPT_DIR))
-#     CustomExceptions = importlib.import_module(__package_name__+'.classes.CustomExceptions')
 C_ERR_USAGE = 1
 
 ## Load up some metadata
@@ -43,16 +32,6 @@ except pkg_resources.DistributionNotFound:
     for s in stubs:
         globals()[s] = 'Not Available'
 
-## Functions
-def __print_dunders__():
-    blacklist = ['__builtins__', '__print_dunders__']
-    for k, v in list(globals().items()):
-        if k.startswith('__'):
-            if k in blacklist:
-                pass
-            else:
-                pprint("%s => %s" % (k, v))
-
 def isNaive(t):
     if t.tzinfo is None or t.tzinfo.utcoffset(t) is None:
         return True
@@ -65,9 +44,6 @@ def isAware(t):
     else:
         return False
 
-def demo():
-    __print_dunders__()
-    sys.exit(1)
 def naiveToAware(dt, tz):
     src = pytz.timezone(tz)
     return dt.astimezone(src)
@@ -124,7 +100,7 @@ def to24h(dt, fmt='%Y-%m-%d %H:%M:%S'):
 def usage_list():
     for i in pytz.all_timezones:
         print(i)
-    sys.exit(1)
+    sys.exit(C_ERR_USAGE)
 
 def begin_logging():
     handler = logging.StreamHandler()
