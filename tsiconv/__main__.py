@@ -24,6 +24,7 @@ from dateutil.parser import isoparse
 #     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 #     sys.path.append(os.path.dirname(SCRIPT_DIR))
 #     CustomExceptions = importlib.import_module(__package_name__+'.classes.CustomExceptions')
+C_ERR_USAGE = 1
 
 ## Load up some metadata
 try:
@@ -67,6 +68,58 @@ def isAware(t):
 def demo():
     __print_dunders__()
     sys.exit(1)
+def naiveToAware(dt, tz):
+    src = pytz.timezone(tz)
+    return dt.astimezone(src)
+
+def handle_user_time(t, verbose, log):
+    """ Parse the  time using ISO-8601; then determine if naive/aware """
+    # convert user input
+    dt = isoparse(t)
+    dt_f = None                 # how to handle the datetime
+    dt_n = isNaive(dt)          # check if naive
+    dt_a = isAware(dt)          # check if aware
+    if verbose:
+        log.info(f"[*] Checking if {dt} is a Naive or Aware format")
+
+    if dt_n:
+        dt_f = 'naive'
+        if verbose:
+            log.info(f"[*] {dt} is a Naive format: {dt_n}")
+    elif dt_a:
+        dt_f = 'aware'
+        if verbose:
+            log.info(f"[*] {dt} is an Aware format: {dt_a}")
+    else:
+        # panic?
+        msg = "Unable to detect naive/aware format for {dt}"
+        raise ValueError(msg)
+
+    return dt, dt_f
+
+def naiveToUTC(dt, tz):
+    dtz = naiveToAware(dt, tz)
+    utz = awareToUTC(dt)
+    return utz
+
+def awareToUTC(dt):
+    return dt.astimezone(pytz.utc)
+
+def convertTime(dt, tz):
+    dst = pytz.timezone(tz)
+    return dt.astimezone(dst)
+
+def print_12h(dt):
+    print(to12h(dt))
+
+def print_24h(dt):
+    print(to24h(dt))
+
+def to12h(dt, fmt='%Y-%m-%d %I:%M:%S %p'):
+    return dt.strftime(fmt)
+
+def to24h(dt, fmt='%Y-%m-%d %H:%M:%S'):
+    return dt.strftime(fmt)
 
 def usage_list():
     for i in pytz.all_timezones:
@@ -82,7 +135,10 @@ def begin_logging():
         )
     )
     log = logging.getLogger(__package_name__)
-    log.setLevel(logging.INFO)
+    if __code_debug__:
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
     log.addHandler(handler)
     return log
 
@@ -92,6 +148,8 @@ def collect_args():
     parser.add_argument('-V', '--version', action='version', version=__code_version__)
     parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument('-t', '--time', action='store', required=True, help="A datetime to convert. This should be in ISO-8601 format")
+    parser.add_argument('-s', '--source', action='store', help="A source timezone to translate from. Only required if --time is a naive format")
+    parser.add_argument('-d', '--destination', action='store', help="A destination timezone to translate from")
     parser.add_argument('-l', '--list', action='store_true', help="List out the timezones supported by this application")
     args = parser.parse_args()
     return parser, args
@@ -99,17 +157,49 @@ def collect_args():
 def handle_args():
     # collect parser if needed to conditionally call usage: parser.print_help()
     parser, args = collect_args()
-    return args
+    return parser, args
 
 def main():
     log = begin_logging()
-    args = handle_args()
+    parser, args = handle_args()
 
     try:
 
         # print out timezones?
         if args.list:
             usage_list()
+
+        # Capture user input, convert to UTC
+        dt, na = handle_user_time(args.time, args.verbose, log)
+        assert na in ['naive', 'aware']
+        if na == 'naive':
+            if args.source is None:
+                msg = "[!] A naive timestamp was provided with no identifying timezone information. See option -s"
+                print(msg)
+                parser.print_help()
+                sys.exit(C_ERR_USAGE)
+            utctime = naiveToUTC(dt, args.source)
+        else:
+            utctime = awareToUTC(dt)
+
+        # Convert UTC into requested timezone
+        if args.destination:
+            dsttime = convertTime(utctime, args.destination)
+
+        # Print results
+        print(f"[*] Args:")
+        if args.source:
+            print(f"[*] source: {args.source}")
+        if args.destination:
+            print(f"[*] destination: {args.destination}")
+        print(f"[+] Input  24h: {to24h(dt)}")
+        print(f"[+] Input  12h: {to12h(dt)}")
+        print(f"[+] UTC    24h: {to24h(utctime)}")
+        print(f"[+] UTC    12h: {to12h(utctime)}")
+        if args.destination:
+            print(f"[+] Output 24h: {to24h(dsttime)}")
+            print(f"[+] Output 12h: {to12h(dsttime)}")
+
     except Exception as e:
         pprint(e)
         raise e
