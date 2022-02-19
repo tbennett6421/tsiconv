@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "tsiconv"
-version = "0.0.1"
-description = "Python Boilerplate contains all the boilerplate you need to create a Python package."
+version = "1.0.0"
+description = "convert an input time to UTC (optionally a destination timezone)."
 authors = ["Tyler Bennett <tbennett6421@gmail.com>"]
 readme = "README.md"
 homepage = "https://github.com/tbennett6421/tsiconv"
